@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claim Status Predictor</title>
+  </head>
+  <body>
+    <h1>Predict Health Insurance Claim Status</h1>
+    <form action="/predict" method="post">
+      <label>Age: <input type="number" name="age" /></label><br />
+      <label
+        >Sex (0 for female, 1 for male):
+        <input type="number" name="sex" /></label
+      ><br />
+      <label>BMI: <input type="number" step="0.1" name="bmi" /></label><br />
+      <label>Children: <input type="number" name="children" /></label><br />
+      <label
+        >Smoker (0 for no, 1 for yes):
+        <input type="number" name="smoker" /></label
+      ><br />
+      <label
+        >Region (0, 1, 2, or 3): <input type="number" name="region" /></label
+      ><br />
+      <label>Charges: <input type="number" step="0.01" name="charges" /></label
+      ><br />
+      <button type="submit">Predict</button>
+    </form>
+    <h2>{{ prediction_text }}</h2>
+  </body>
+</html>
