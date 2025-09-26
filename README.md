@@ -15,20 +15,47 @@ This project analyzes health insurance claims to predict approval decisions, hel
 | **Training Time** | <10 seconds |
 | **Models Trained** | Logistic Regression, Random Forest |
 
+## Prerequisites
+
+- **Python 3.11.x (required)**
+  This project's pinned dependencies are tested on Python 3.11.
+  Newer interpreters (e.g., 3.13) may not have prebuilt wheels and can trigger
+  "Microsoft Visual C++ 14.0 or greater is required" build errors on Windows.
+
 ## Quick Start
 
 ```bash
-# Install dependencies
+# 1) Clone
+git clone https://github.com/odinruiz52/Health_Claim_Prediction.git
+cd Health_Claim_Prediction
+
+# 2) Create & activate a Python 3.11 virtual environment
+# Windows (PowerShell with Python launcher):
+py -3.11 -m venv venv
+.\venv\Scripts\Activate.ps1
+
+# macOS/Linux (ensure python3.11 is installed):
+python3.11 -m venv venv
+source venv/bin/activate
+
+# 3) Install
+pip install -U pip
 pip install -r requirements.txt
 
-# Train the model
+# 4) Train and generate artifacts/plots
 python run_pipeline.py
 
-# Run the web application
+# 5) Run the web app
 python app.py
 ```
 
 Visit `http://localhost:5000` to use the prediction interface.
+
+### Troubleshooting
+
+- **Pip tries to compile scikit-learn and fails on Windows**
+  You're likely using Python 3.12+ or 3.13.
+  Use **Python 3.11** instead (see Quick Start).
 
 ## Project Structure
 
