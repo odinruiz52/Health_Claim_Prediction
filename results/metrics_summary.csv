@@ -1,0 +1,3 @@
+Model,Accuracy,Best_Model
+Logistic Regression,0.662,Yes
+Random Forest,0.637,No

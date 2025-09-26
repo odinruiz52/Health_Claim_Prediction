@@ -1,0 +1,14 @@
+{
+  "best_model": "Logistic Regression",
+  "best_accuracy": 0.662,
+  "models": {
+    "logistic_regression": {
+      "accuracy": 0.662,
+      "display_name": "Logistic Regression"
+    },
+    "random_forest": {
+      "accuracy": 0.637,
+      "display_name": "Random Forest"
+    }
+  }
+}
