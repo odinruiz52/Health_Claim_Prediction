@@ -17,10 +17,8 @@ This project analyzes health insurance claims to predict approval decisions, hel
 
 ## Prerequisites
 
-- **Python 3.11.x (required)**
-  This project's pinned dependencies are tested on Python 3.11.
-  Newer interpreters (e.g., 3.13) may not have prebuilt wheels and can trigger
-  "Microsoft Visual C++ 14.0 or greater is required" build errors on Windows.
+- **Python 3.13 (recommended)** or Python 3.10+
+  Tested on: Python 3.13 with scikit-learn 1.7.2, NumPy 2.2.x, SciPy 1.16.x, pandas 2.3.x, Matplotlib 3.9.x, Flask 3.0.x.
 
 ## Quick Start
 
@@ -29,13 +27,13 @@ This project analyzes health insurance claims to predict approval decisions, hel
 git clone https://github.com/odinruiz52/Health_Claim_Prediction.git
 cd Health_Claim_Prediction
 
-# 2) Create & activate a Python 3.11 virtual environment
+# 2) Create & activate a Python 3.13 virtual environment
 # Windows (PowerShell with Python launcher):
-py -3.11 -m venv venv
+py -3.13 -m venv venv
 .\venv\Scripts\Activate.ps1
 
-# macOS/Linux (ensure python3.11 is installed):
-python3.11 -m venv venv
+# macOS/Linux (ensure python3.13 is installed):
+python3.13 -m venv venv
 source venv/bin/activate
 
 # 3) Install
@@ -53,9 +51,8 @@ Visit `http://localhost:5000` to use the prediction interface.
 
 ### Troubleshooting
 
-- **Pip tries to compile scikit-learn and fails on Windows**
-  You're likely using Python 3.12+ or 3.13.
-  Use **Python 3.11** instead (see Quick Start).
+- **Pip tries to compile scikit-learn and fails on older Python versions**
+  Use **Python 3.13** for best compatibility with prebuilt wheels (see Quick Start).
 
 ## Project Structure
 

@@ -3,12 +3,6 @@
 Simple Flask web application for health insurance claim prediction.
 """
 
-import sys
-if sys.version_info[:2] != (3, 11):
-    print(f"[INFO] This project was tested on Python 3.11.x "
-          f"(you're on {sys.version_info.major}.{sys.version_info.minor}). "
-          "If you hit install/build issues, please switch to Python 3.11.")
-
 import os
 import joblib
 import pandas as pd
