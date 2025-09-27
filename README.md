@@ -121,6 +121,17 @@ Then open your browser to `http://localhost:5000` and enter:
 - Smoking status (Yes/No)
 - Region (Northeast, Southeast, Southwest, Northwest)
 
+## Web App Preview
+
+**Clean form**
+![Web form – empty](docs/app_home.png)
+
+**Approved example**
+![Approved prediction with summary](docs/app_approved.png)
+
+**Denied example**
+![Denied prediction with summary](docs/app_denied.png)
+
 ### Running Tests
 
 ```bash
