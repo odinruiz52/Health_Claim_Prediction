@@ -9,7 +9,3 @@ __pycache__/
 .vscode/
 *.log
 *.env
-
-# Ignore Claude Code files
-.claude/
-.claude*
