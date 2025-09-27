@@ -6,7 +6,8 @@ Simple Flask web application for health insurance claim prediction.
 import os
 import joblib
 import pandas as pd
-from flask import Flask, request, render_template_string, jsonify
+from datetime import datetime
+from flask import Flask, request, render_template, jsonify, session, redirect, url_for
 from pathlib import Path
 
 # Initialize Flask app
@@ -32,173 +33,174 @@ def load_model():
         print(f"Error loading model: {e}")
         return False
 
-# HTML template
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Health Insurance Claim Prediction</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-        .form-group { margin: 15px 0; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .result { margin: 20px 0; padding: 15px; border-radius: 4px; }
-        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
-    </style>
-</head>
-<body>
-    <h1>Health Insurance Claim Prediction</h1>
-
-    {% if prediction %}
-    <div class="result {{ result_class }}">
-        <strong>Prediction Result:</strong> {{ prediction }}
-    </div>
-    {% endif %}
-
-    {% if error %}
-    <div class="result error">
-        <strong>Error:</strong> {{ error }}
-    </div>
-    {% endif %}
-
-    <form method="POST" action="/predict">
-        <div class="form-group">
-            <label for="age">Age (18-100):</label>
-            <input type="number" id="age" name="age" min="18" max="100" required>
-        </div>
-
-        <div class="form-group">
-            <label for="sex">Sex:</label>
-            <select id="sex" name="sex" required>
-                <option value="">Select...</option>
-                <option value="0">Female</option>
-                <option value="1">Male</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="bmi">BMI (15.0-50.0):</label>
-            <input type="number" id="bmi" name="bmi" min="15" max="50" step="0.1" required>
-        </div>
-
-        <div class="form-group">
-            <label for="children">Number of Children (0-10):</label>
-            <input type="number" id="children" name="children" min="0" max="10" required>
-        </div>
-
-        <div class="form-group">
-            <label for="smoker">Smoker:</label>
-            <select id="smoker" name="smoker" required>
-                <option value="">Select...</option>
-                <option value="0">No</option>
-                <option value="1">Yes</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="region">Region:</label>
-            <select id="region" name="region" required>
-                <option value="">Select...</option>
-                <option value="0">Northeast</option>
-                <option value="1">Southeast</option>
-                <option value="2">Southwest</option>
-                <option value="3">Northwest</option>
-            </select>
-        </div>
-
-        <button type="submit">Predict Claim Status</button>
-    </form>
-</body>
-</html>
-"""
+def _clean_form(form_data):
+    """Clean and convert form data to appropriate types."""
+    try:
+        return {
+            'age': int(form_data.get('age', 0)),
+            'sex': int(form_data.get('sex', 0)),
+            'bmi': float(form_data.get('bmi', 0.0)),
+            'children': int(form_data.get('children', 0)),
+            'smoker': int(form_data.get('smoker', 0)),
+            'region': int(form_data.get('region', 0))
+        }
+    except (ValueError, TypeError):
+        return None
 
 @app.route('/')
 def home():
     """Home page with prediction form."""
-    return render_template_string(HTML_TEMPLATE)
+    form_values = session.get('last_input', {})
+    history = session.get('history', [])
+    return render_template('index.html',
+                         form_values=form_values,
+                         history=history,
+                         result=None)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     """Make prediction based on form input."""
     if model is None:
-        return render_template_string(
-            HTML_TEMPLATE,
-            error="Model not loaded. Please train a model first.",
-            result_class="error"
-        )
+        if request.is_json:
+            return jsonify({"error": "Model not loaded", "status": "error"}), 500
+        form_values = session.get('last_input', {})
+        history = session.get('history', [])
+        return render_template('index.html',
+                             form_values=form_values,
+                             history=history,
+                             result=None,
+                             error="Model not loaded. Please train a model first.")
 
+    # Handle JSON API requests
+    if request.is_json:
+        try:
+            data = request.get_json()
+            age = int(data['age'])
+            sex = int(data['sex'])
+            bmi = float(data['bmi'])
+            children = int(data['children'])
+            smoker = int(data['smoker'])
+            region = int(data['region'])
+
+            # Validate inputs
+            if not (18 <= age <= 100):
+                raise ValueError("Age must be between 18 and 100")
+            if sex not in [0, 1]:
+                raise ValueError("Sex must be 0 (Female) or 1 (Male)")
+            if not (15.0 <= bmi <= 50.0):
+                raise ValueError("BMI must be between 15.0 and 50.0")
+            if not (0 <= children <= 10):
+                raise ValueError("Children must be between 0 and 10")
+            if smoker not in [0, 1]:
+                raise ValueError("Smoker must be 0 (No) or 1 (Yes)")
+            if region not in [0, 1, 2, 3]:
+                raise ValueError("Region must be 0, 1, 2, or 3")
+
+            # Create input DataFrame
+            input_data = pd.DataFrame([[age, sex, bmi, children, smoker, region]],
+                                      columns=['age', 'sex', 'bmi', 'children', 'smoker', 'region'])
+
+            # Make prediction
+            prediction = model.predict(input_data)[0]
+            decision = "Approved" if prediction == 1 else "Denied"
+
+            return jsonify({
+                "decision": decision,
+                "status": "success"
+            })
+
+        except (KeyError, ValueError, TypeError) as e:
+            return jsonify({"error": str(e), "status": "error"}), 400
+        except Exception as e:
+            return jsonify({"error": "Prediction failed", "status": "error"}), 500
+
+    # Handle HTML form requests
     try:
-        # Get form data
-        age = int(request.form['age'])
-        sex = int(request.form['sex'])
-        bmi = float(request.form['bmi'])
-        children = int(request.form['children'])
-        smoker = int(request.form['smoker'])
-        region = int(request.form['region'])
+        # Clean form data
+        inputs = _clean_form(request.form)
+        if inputs is None:
+            raise ValueError("Invalid input data")
 
         # Validate inputs
-        if not (18 <= age <= 100):
+        if not (18 <= inputs['age'] <= 100):
             raise ValueError("Age must be between 18 and 100")
-        if sex not in [0, 1]:
+        if inputs['sex'] not in [0, 1]:
             raise ValueError("Sex must be 0 (Female) or 1 (Male)")
-        if not (15.0 <= bmi <= 50.0):
+        if not (15.0 <= inputs['bmi'] <= 50.0):
             raise ValueError("BMI must be between 15.0 and 50.0")
-        if not (0 <= children <= 10):
+        if not (0 <= inputs['children'] <= 10):
             raise ValueError("Children must be between 0 and 10")
-        if smoker not in [0, 1]:
+        if inputs['smoker'] not in [0, 1]:
             raise ValueError("Smoker must be 0 (No) or 1 (Yes)")
-        if region not in [0, 1, 2, 3]:
+        if inputs['region'] not in [0, 1, 2, 3]:
             raise ValueError("Region must be 0, 1, 2, or 3")
 
+        # Store form values in session for sticky inputs
+        session['last_input'] = inputs
+
         # Create input DataFrame
-        input_data = pd.DataFrame([[age, sex, bmi, children, smoker, region]],
+        input_data = pd.DataFrame([[inputs['age'], inputs['sex'], inputs['bmi'],
+                                   inputs['children'], inputs['smoker'], inputs['region']]],
                                   columns=['age', 'sex', 'bmi', 'children', 'smoker', 'region'])
 
         # Make prediction
         prediction = model.predict(input_data)[0]
+        decision = "Approved" if prediction == 1 else "Denied"
 
-        # Convert prediction to readable format
-        result = "Approved" if prediction == 1 else "Denied"
-        result_class = "success" if prediction == 1 else "error"
+        result = {"decision": decision}
 
-        # Return result
-        if request.is_json:
-            return jsonify({
-                "prediction": result,
-                "status": "success"
-            })
-        else:
-            return render_template_string(
-                HTML_TEMPLATE,
-                prediction=result,
-                result_class=result_class
-            )
+        # Add to history (cap at 10)
+        if 'history' not in session:
+            session['history'] = []
+
+        history_entry = {
+            **inputs,
+            'decision': decision,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        session['history'].insert(0, history_entry)  # Add to beginning
+        if len(session['history']) > 10:
+            session['history'] = session['history'][:10]  # Keep only 10
+
+        # Get updated history for rendering
+        history = session.get('history', [])
+
+        return render_template('index.html',
+                             form_values=inputs,
+                             history=history,
+                             result=result)
 
     except ValueError as e:
-        error_msg = str(e)
-        if request.is_json:
-            return jsonify({"error": error_msg, "status": "error"}), 400
-        else:
-            return render_template_string(
-                HTML_TEMPLATE,
-                error=error_msg,
-                result_class="error"
-            )
+        form_values = session.get('last_input', {})
+        history = session.get('history', [])
+        return render_template('index.html',
+                             form_values=form_values,
+                             history=history,
+                             result=None,
+                             error=str(e))
     except Exception as e:
-        error_msg = "Prediction failed. Please check your input."
-        if request.is_json:
-            return jsonify({"error": error_msg, "status": "error"}), 500
-        else:
-            return render_template_string(
-                HTML_TEMPLATE,
-                error=error_msg,
-                result_class="error"
-            )
+        form_values = session.get('last_input', {})
+        history = session.get('history', [])
+        return render_template('index.html',
+                             form_values=form_values,
+                             history=history,
+                             result=None,
+                             error="Prediction failed. Please check your input.")
+
+@app.route('/clear', methods=['POST'])
+def clear_form():
+    """Clear form fields only."""
+    if 'last_input' in session:
+        del session['last_input']
+    return redirect(url_for('home'))
+
+@app.route('/clear-history', methods=['POST'])
+def clear_history():
+    """Clear prediction history only."""
+    if 'history' in session:
+        del session['history']
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     # Load model on startup
