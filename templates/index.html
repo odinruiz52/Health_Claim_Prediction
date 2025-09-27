@@ -175,9 +175,11 @@
 
         .button-row {
             display: flex;
+            justify-content: center;
             align-items: center;
             gap: 1rem;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .clear-buttons {
@@ -266,27 +268,30 @@
                             </div>
                         </div>
 
-                        <!-- Button Row -->
-                        <div class="button-row">
+                        <!-- Primary Submit Button -->
+                        <div class="d-grid">
                             <button type="submit" class="btn btn-custom btn-primary-custom">
                                 Predict Claim Status
                             </button>
-
-                            <div class="clear-buttons">
-                                <form method="POST" action="/clear" style="display: inline;">
-                                    <button type="submit" class="btn btn-outline-custom btn-outline-danger-custom">
-                                        Clear Form
-                                    </button>
-                                </form>
-
-                                <form method="POST" action="/clear-history" style="display: inline;">
-                                    <button type="submit" class="btn btn-outline-custom btn-outline-secondary-custom">
-                                        Clear History
-                                    </button>
-                                </form>
-                            </div>
                         </div>
                     </form>
+
+                    <!-- Clear Buttons (Outside Main Form) -->
+                    <div class="button-row">
+                        <div class="clear-buttons">
+                            <form method="POST" action="/clear" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-custom btn-outline-danger-custom">
+                                    Clear Form
+                                </button>
+                            </form>
+
+                            <form method="POST" action="/clear-history" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-custom btn-outline-secondary-custom">
+                                    Clear History
+                                </button>
+                            </form>
+                        </div>
+                    </div>
 
                     <!-- Submission Summary -->
                     {% if result %}
